@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
-import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray, transferArrayItem, CdkDropListGroup } from '@angular/cdk/drag-drop';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,7 +13,7 @@ import { Task } from '../core/interfaces/task.interface';
 import { BoardService } from '../core/services/board';
 import { ColumnService } from '../core/services/column';
 import { TaskService } from '../core/services/task';
-import { forkJoin, map, switchMap } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { DatePipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { ColumnForm } from './column-form/column-form';
@@ -21,11 +21,28 @@ import { LocalStorageService } from '../core/services/local-storage-service';
 import { TaskForm } from './task-form/task-form';
 import { MatListModule } from '@angular/material/list';
 import { BoardForm } from './board-form/board-form';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 
 @Component({
   selector: 'app-kanban',
-  imports: [FormsModule, CdkDrag, CdkDropList, MatButtonModule, MatIconModule, MatMenuModule, MatCardModule, MatChipsModule, MatProgressBarModule, DatePipe, MatListModule],
+  imports: [
+    FormsModule,
+    CdkDrag,
+    CdkDropList,
+    CdkDropListGroup,
+    MatButtonModule,
+    MatIconModule,
+    MatMenuModule,
+    MatCardModule,
+    MatChipsModule,
+    MatProgressBarModule,
+    DatePipe,
+    MatListModule,
+    MatTooltipModule,
+    MatCheckboxModule
+  ],
   providers: [BoardService, ColumnService, TaskService],
   templateUrl: './kanban.html',
 })
@@ -81,7 +98,6 @@ export class Kanban implements OnInit {
       next: (columns) => {
         this.columnsBoard.set(columns);
 
-        // Só busca as tasks se houver colunas
         if (columns.length > 0) {
           this.getTasksFromColumns(columns);
         } else {
@@ -118,42 +134,54 @@ export class Kanban implements OnInit {
     });
   }
 
-  drop(event: CdkDragDrop<any[] | undefined>, columnId: string) {
-    if (!event.previousContainer.data || !event.container.data) {
+  drop(event: CdkDragDrop<Task[]>) {
+
+    const previousData = event.previousContainer.data;
+    const currentData = event.container.data;
+
+    if (!previousData || !currentData) {
+      console.error('Dados da lista não encontrados');
       return;
     }
 
     if (event.previousContainer === event.container) {
       moveItemInArray(
-        event.container.data,
+        currentData,
         event.previousIndex,
         event.currentIndex
       );
     } else {
       transferArrayItem(
-        event.previousContainer.data,
-        event.container.data,
+        previousData,
+        currentData,
         event.previousIndex,
         event.currentIndex
       );
-    }
 
-    this.saveDataAfterMove(event as CdkDragDrop<Task[]>, columnId);
+      const targetColumnId = event.container.id;
+      const task = event.item.data as Task;
+
+      this.updateTaskInBackend(task, targetColumnId);
+    }
   }
 
-  private saveDataAfterMove(event: CdkDragDrop<Task[]>, targetColumnId: string) {
-    event.container.data.forEach((task, index) => {
-      task.position = index;
-      task.columnId = targetColumnId;
-      this.taskService.update(task.id, task).subscribe();
-    });
+  private updateTaskInBackend(task: Task, newColumnId: string) {
+    const updatedTask: Task = {
+      ...task,
+      columnId: newColumnId
+    };
 
-    if (event.previousContainer !== event.container) {
-      event.previousContainer.data.forEach((task, index) => {
-        task.position = index;
-        this.taskService.update(task.id, task).subscribe();
-      });
-    }
+    this.taskService.update(task.id, updatedTask).subscribe({
+      next: () => {
+        this.loadDataTask()
+        console.log('Sucesso: Task movida no banco de dados');
+
+      },
+      error: (err) => {
+        console.error('Erro ao mover task no servidor:', err);
+        this.loadDataTask();
+      }
+    });
   }
 
   getConnectedList(): string[] {
@@ -164,6 +192,12 @@ export class Kanban implements OnInit {
   deleteColumn(id: string) {
     this.columnService.delete(id).subscribe(() => {
       this.columnsBoard.set(this.columnsBoard().filter(c => c.id !== id));
+    });
+  }
+
+  deleteTask(id: string) {
+    this.taskService.delete(id).subscribe(() => {
+      this.taskList.set(this.taskList().filter(c => c.id !== id));
     });
   }
 

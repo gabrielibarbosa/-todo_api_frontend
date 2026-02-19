@@ -33,40 +33,43 @@
             </button>
         </div>
         <div>
-            
+
         </div>
-        <div cdkDropList cdkDropListOrientation="horizontal" class="flex flex-row gap-6 h-full"
+        <div cdkDropListGroup cdkDropList cdkDropListOrientation="horizontal" class="flex flex-row gap-6 h-full"
             [cdkDropListData]="columnsBoard()" (cdkDropListDropped)="dropColumn($event)">
 
             @for (column of columnsBoard(); track column.id) {
-            <div class="w-[350px] min-w-[350px] bg-slate-100 rounded-lg flex flex-col max-h-full bg-black" cdkDrag>
+            <div class="w-[350px] min-w-[350px] bg-slate-100 rounded-lg flex flex-col max-h-full" cdkDrag>
 
                 <div class="p-4 flex justify-between items-center cursor-move" cdkDragHandle>
                     <h3 class="font-bold text-slate-700 uppercase text-sm tracking-wider">
                         {{ column.name }}
-                        <span class="ml-2 text-slate-400 font-normal">({{ column.tasks?.length || 0 }})</span>
+                        <span class="ml-2 text-slate-400 font-normal">({{ tasksByColumn()[column.id]?.length || 0
+                            }})</span>
                     </h3>
-                    <button mat-icon-button [matMenuTriggerFor]="colMenu">
-                        <mat-icon>more_vert</mat-icon>
-                    </button>
-                    <button matButton="filled" color="primary" (click)="openDialogTask(column?.id)">
-                        ADICIONAR TASK
-                    </button>
+                    <div class="flex items-center gap-1">
+                        <button mat-icon-button (click)="openDialogTask(column.id)">
+                            <mat-icon>add</mat-icon>
+                        </button>
+                        <button mat-icon-button [matMenuTriggerFor]="colMenu">
+                            <mat-icon>more_vert</mat-icon>
+                        </button>
+                    </div>
+
                     <mat-menu #colMenu="matMenu">
                         <button mat-menu-item (click)="deleteColumn(column.id)">EXCLUIR</button>
                         <button mat-menu-item (click)="openDialogColumn(column)">EDITAR</button>
-
                     </mat-menu>
-
                 </div>
-                @for (cardTask of tasksByColumn()[column.id]; track cardTask.id) {
 
-                <div class=" overflow-y-auto " [id]="column.id" cdkDropList
-                    [cdkDropListData]="column.tasks" [cdkDropListConnectedTo]="getConnectedList()"
-                    (cdkDropListDropped)="drop($event, column.id)">
+                <div class="flex-1 overflow-y-auto min-h-[150px] p-2" [id]="column.id" cdkDropList
+                    [cdkDropListData]="tasksByColumn()[column.id] || []" (cdkDropListDropped)="drop($event)">
 
-                    <mat-card class="m-[8px] cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
-                        appearance="outlined" cdkDrag>
+                    @for (cardTask of tasksByColumn()[column.id]; track cardTask.id) {
+                    <mat-card cdkDrag [cdkDragData]="cardTask"
+                        class="m-[8px] cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
+                        appearance="outlined">
+
                         <mat-card-header class="pb-2">
                             <mat-card-title class="text-base">{{ cardTask.name }}</mat-card-title>
                         </mat-card-header>
@@ -84,10 +87,8 @@
                             </mat-chip-set>
                         </mat-card-content>
                     </mat-card>
-
-
+                    }
                 </div>
-                }
             </div>
             }
         </div>
