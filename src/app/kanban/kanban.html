@@ -1,0 +1,95 @@
+<header class="p-[24px] h-[80px] flex justify-between items-center">
+    <p class="font-mono text-4xl font-bold text-slate-800">Kanban Todo API</p>
+
+</header>
+<section class="flex flex-row">
+    <nav class="flex  min-w-[300px] p-[24px] flex-col gap-[8px]">
+        <mat-nav-list>
+            <h3 matSubheader class="font-mono text-1xl font-bold text-slate-800">Boards disponíveis:</h3>
+            @for (item of boardList(); track item.id) {
+            <a mat-list-item [activated]="boardSelecionado()?.id===item.id" (click)="boardSelecionado.set(item)">
+                <mat-icon matListItemIcon>folder</mat-icon>
+                <span matListItemTitle>{{ item.name}}</span>
+            </a>
+            }
+        </mat-nav-list>
+        <button mat-fab extended color="primary" (click)="openDialogBoard()">
+            <mat-icon>add</mat-icon>
+            NOVO BOARD
+        </button>
+
+
+    </nav>
+
+    <article class="p-[24px] h-[calc(100vh-100px)] overflow-x-auto overflow-y-hidden">
+        <div class="flex flex-row gap-[8px] ">
+            <button mat-fab extended color="primary" (click)="openDialogBoard('edit')" [disabled]="!boardSelecionado()">
+                <mat-icon>add</mat-icon>
+                EDITAR BOARD
+            </button>
+            <button mat-fab extended color="primary" (click)="openDialogColumn()" [disabled]="!boardSelecionado()">
+                <mat-icon>add</mat-icon>
+                ADICIONAR COLUNA
+            </button>
+        </div>
+        <div>
+            
+        </div>
+        <div cdkDropList cdkDropListOrientation="horizontal" class="flex flex-row gap-6 h-full"
+            [cdkDropListData]="columnsBoard()" (cdkDropListDropped)="dropColumn($event)">
+
+            @for (column of columnsBoard(); track column.id) {
+            <div class="w-[350px] min-w-[350px] bg-slate-100 rounded-lg flex flex-col max-h-full bg-black" cdkDrag>
+
+                <div class="p-4 flex justify-between items-center cursor-move" cdkDragHandle>
+                    <h3 class="font-bold text-slate-700 uppercase text-sm tracking-wider">
+                        {{ column.name }}
+                        <span class="ml-2 text-slate-400 font-normal">({{ column.tasks?.length || 0 }})</span>
+                    </h3>
+                    <button mat-icon-button [matMenuTriggerFor]="colMenu">
+                        <mat-icon>more_vert</mat-icon>
+                    </button>
+                    <button matButton="filled" color="primary" (click)="openDialogTask(column?.id)">
+                        ADICIONAR TASK
+                    </button>
+                    <mat-menu #colMenu="matMenu">
+                        <button mat-menu-item (click)="deleteColumn(column.id)">EXCLUIR</button>
+                        <button mat-menu-item (click)="openDialogColumn(column)">EDITAR</button>
+
+                    </mat-menu>
+
+                </div>
+                @for (cardTask of tasksByColumn()[column.id]; track cardTask.id) {
+
+                <div class=" overflow-y-auto " [id]="column.id" cdkDropList
+                    [cdkDropListData]="column.tasks" [cdkDropListConnectedTo]="getConnectedList()"
+                    (cdkDropListDropped)="drop($event, column.id)">
+
+                    <mat-card class="m-[8px] cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
+                        appearance="outlined" cdkDrag>
+                        <mat-card-header class="pb-2">
+                            <mat-card-title class="text-base">{{ cardTask.name }}</mat-card-title>
+                        </mat-card-header>
+
+                        <mat-card-content class="text-sm text-slate-600">
+                            <div class="flex items-center gap-1 mb-2">
+                                <mat-icon class="text-xs scale-75">calendar_today</mat-icon>
+                                {{ transformDate(cardTask.createdAt) | date:'dd/MM/yyyy' }}
+                            </div>
+
+                            <mat-chip-set>
+                                @for (tag of cardTask.tags; track tag) {
+                                <mat-chip class="scale-90 origin-left">{{ tag }}</mat-chip>
+                                }
+                            </mat-chip-set>
+                        </mat-card-content>
+                    </mat-card>
+
+
+                </div>
+                }
+            </div>
+            }
+        </div>
+    </article>
+</section>

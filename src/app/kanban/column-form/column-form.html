@@ -1,0 +1,28 @@
+<h2 mat-dialog-title>{{ data.column ? 'Editar Coluna' : 'Nova Coluna' }}</h2>
+
+<mat-dialog-content  >
+  <form [formGroup]="form" class="flex flex-col  gap-[16px]">
+    <mat-form-field appearance="outline" class="w-full mt-[8px]">
+      <mat-label>Nome da Coluna</mat-label>
+      <input matInput formControlName="name" placeholder="Exemplo: To Do">
+      @if (form.get('name')?.hasError('required')) {
+        <mat-error>O nome é obrigatório</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Posição</mat-label>
+      <input matInput type="number" formControlName="position">
+      @if (form.get('position')?.hasError('required')) {
+        <mat-error>A posição é obrigatória</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancelar</button>
+  <button mat-raised-button color="primary" [disabled]="form.invalid" (click)="onSave()">
+    Salvar
+  </button>
+</mat-dialog-actions>

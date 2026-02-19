@@ -1,0 +1,50 @@
+<h2 mat-dialog-title>{{ data.task ? 'Editar Task' : 'Nova Task' }}</h2>
+<mat-dialog-content >
+  <form [formGroup]="form"  class="flex flex-col  gap-[8px]">
+    <mat-form-field appearance="outline" class="w-full mt-[8px]">
+      <mat-label>Nome da Task</mat-label>
+      <input matInput formControlName="name">
+    </mat-form-field>
+
+    <div class="flex flex-row">
+ <mat-form-field appearance="outline" class="w-1/2">
+      <mat-label>Posição</mat-label>
+      <input matInput type="number" formControlName="position">
+    </mat-form-field>
+
+    <div class="checkbox-container">
+      <mat-checkbox formControlName="completed" color="primary">
+        Tarefa concluída
+      </mat-checkbox>
+    </div>
+    </div>
+   
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Tags</mat-label>
+      <mat-chip-grid #chipGrid aria-label="Seleção de tags">
+        @for (tag of tags(); track tag) {
+          <mat-chip-row (removed)="removeTag(tag)">
+            {{tag}}
+            <button matChipRemove aria-label="'remover ' + tag">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip-row>
+        }
+      </mat-chip-grid>
+      <input 
+        placeholder="Nova tag..."
+        [matChipInputFor]="chipGrid"
+        [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+        (matChipInputTokenEnd)="addTag($event)"/>
+      <mat-hint>Pressione Enter ou Vírgula para adicionar</mat-hint>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancelar</button>
+  <button mat-raised-button color="primary" [disabled]="form.invalid" (click)="onSave()">
+    Salvar
+  </button>
+</mat-dialog-actions>

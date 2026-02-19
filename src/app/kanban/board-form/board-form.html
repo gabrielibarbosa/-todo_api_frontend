@@ -1,0 +1,19 @@
+<h2 mat-dialog-title>{{ data.board ? 'Editar Board' : 'Novo Board' }}</h2>
+<mat-dialog-content  >
+  <form [formGroup]="form" class="flex flex-col  gap-[16px]">
+    <mat-form-field appearance="outline" class="w-full mt-[8px]">
+      <mat-label>Nome do board</mat-label>
+      <input matInput formControlName="name" placeholder="Ex: Board Time UX">
+      @if (form.get('name')?.hasError('required')) {
+        <mat-error>O nome é obrigatório</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancelar</button>
+  <button mat-raised-button color="primary" [disabled]="form.invalid" (click)="onSave()">
+    Salvar
+  </button>
+</mat-dialog-actions>
